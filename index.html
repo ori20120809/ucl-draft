@@ -5,23 +5,539 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>UCL Draft</title>
 <style>
-:root{--bg:#0a1128;--bg2:#101a3a;--card:#14204a;--line:#25356b;--green:#2eff7b;--text:#ffffff;--muted:#9fb0d9;--red:#ff5d6c;--amber:#ffc857}
+:root{
+  --bg:#0a1128;--bg2:#101a3a;--card:#14204a;--line:#25356b;
+  --green:#2eff7b;--green-d:#1fc45c;--text:#ffffff;--muted:#9fb0d9;
+  --red:#ff5d6c;--amber:#ffc857;
+}
 *{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.45;min-height:100vh}
 button,input,select{font:inherit;color:inherit}
 :focus-visible{outline:3px solid var(--green);outline-offset:2px}
+h1,h2,h3{line-height:1.15}
+.hidden{display:none!important}
 .wrap{max-width:1200px;margin:0 auto;padding:16px}
-.btn{background:var(--green);color:#04210f;border:0;border-radius:10px;padding:11px 18px;font-weight:700;cursor:pointer}
+.btn{background:var(--green);color:#04210f;border:0;border-radius:10px;padding:11px 18px;font-weight:700;cursor:pointer;transition:transform .12s,background .2s,opacity .2s}
+.btn:hover{background:#5dffa0;transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
 .btn.ghost{background:transparent;color:var(--green);border:1.5px solid var(--green)}
+.btn.ghost:hover{background:rgba(46,255,123,.1)}
+.btn.danger{background:transparent;color:var(--red);border:1.5px solid var(--red)}
+.btn.sm{padding:6px 12px;font-size:.85rem;border-radius:8px}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
 .muted{color:var(--muted)}
 .green{color:var(--green)}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.tag{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
+.tag.GK{color:var(--amber);border-color:var(--amber)}
+.tag.DEF{color:#6db8ff;border-color:#6db8ff}
+.tag.MID{color:var(--green);border-color:var(--green)}
+.tag.FWD{color:var(--red);border-color:var(--red)}
+
+/* nav */
+header.top{position:sticky;top:0;z-index:50;background:rgba(10,17,40,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+header.top .wrap{display:flex;align-items:center;gap:12px;padding:10px 16px}
+.logo{font-weight:900;font-size:1.2rem;letter-spacing:.5px;cursor:pointer;background:none;border:0}
+.logo span{color:var(--green)}
+nav{display:flex;gap:4px;margin-left:auto;overflow-x:auto}
+nav button{background:none;border:0;padding:8px 12px;border-radius:8px;color:var(--muted);cursor:pointer;font-weight:600;white-space:nowrap}
+nav button:hover{color:var(--text)}
+nav button.active{color:var(--green);background:rgba(46,255,123,.1)}
+
+/* welcome */
+.hero{text-align:center;padding:48px 0 24px}
+.hero h1{font-size:clamp(2.2rem,8vw,4rem);font-weight:900}
+.hero p{max-width:560px;margin:16px auto;color:var(--muted);font-size:1.05rem}
+.steps{counter-reset:s}
+.steps .card{position:relative;padding-top:38px}
+.steps .card::before{counter-increment:s;content:counter(s);position:absolute;top:10px;left:14px;width:24px;height:24px;border-radius:50%;background:var(--green);color:#04210f;font-weight:800;display:grid;place-items:center;font-size:.85rem}
+
+/* forms */
+label{display:block;font-weight:600;margin:12px 0 6px}
+input[type=text],input[type=search],select{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.err{color:var(--red);font-size:.9rem;margin-top:6px;min-height:1.2em}
+
+/* draft layout */
+.status-bar{position:sticky;top:53px;z-index:40;background:var(--bg2);border-bottom:1px solid var(--line)}
+.status-bar .wrap{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;padding:8px 16px}
+.stat b{font-size:1.15rem}
+.stat.low b{color:var(--amber)}
+.bar{flex:1;min-width:120px;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--green);transition:width .3s}
+.draft-grid{display:grid;gap:16px;grid-template-columns:1fr}
+@media(min-width:960px){.draft-grid{grid-template-columns:1fr 340px}}
+.filters{display:grid;gap:8px;grid-template-columns:repeat(2,1fr)}
+.filters .full{grid-column:1/-1}
+@media(min-width:600px){.filters{grid-template-columns:repeat(4,1fr)}}
+.filters label{margin:0 0 3px;font-size:.78rem;color:var(--muted)}
+.plist{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));margin-top:12px}
+.pcard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;transition:border-color .2s,transform .2s,box-shadow .2s}
+.pcard.sel{border-color:var(--green);box-shadow:0 0 0 1px var(--green) inset;transform:scale(1.01)}
+.pcard .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pcard h3{font-size:1rem}
+.rating{font-weight:900;font-size:1.3rem;color:var(--green)}
+.price{font-weight:700}
+.attrs{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:10px 0;text-align:center}
+.attrs div{background:var(--bg2);border-radius:6px;padding:3px 0;font-size:.68rem;color:var(--muted)}
+.attrs b{display:block;color:var(--text);font-size:.85rem}
+.side{align-self:start;position:sticky;top:112px;max-height:calc(100vh - 130px);overflow:auto}
+.sq-group h4{font-size:.8rem;color:var(--muted);margin:10px 0 4px;text-transform:uppercase;letter-spacing:.08em}
+.sq-item{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:6px 8px;background:var(--bg2);border-radius:8px;margin-bottom:4px;font-size:.88rem;animation:pop .25s}
+.sq-empty{padding:6px 8px;border:1px dashed var(--line);border-radius:8px;margin-bottom:4px;color:var(--muted);font-size:.82rem}
+@keyframes pop{from{transform:scale(.9);opacity:0}to{transform:none;opacity:1}}
+
+/* pitch */
+.pitch{background:linear-gradient(180deg,#0d3b24,#0a2e1c);border:2px solid #1d6b43;border-radius:14px;padding:14px 8px;display:flex;flex-direction:column;gap:14px;min-height:420px;justify-content:space-around}
+.prow{display:flex;justify-content:space-around;gap:6px}
+.slot{flex:1;max-width:130px;min-width:0}
+.slot select{font-size:.78rem;padding:6px 4px;text-align:center}
+.slot .lbl{font-size:.65rem;text-align:center;color:#8fd6ae;font-weight:700;letter-spacing:.1em}
+.slot.bad select{border-color:var(--amber);background:#3a2f10}
+.slot.empty select{border-style:dashed}
+.slot .cap{width:100%;margin-top:3px;font-size:.68rem;padding:3px;border-radius:6px;background:transparent;border:1px solid var(--line);color:var(--muted);cursor:pointer}
+.slot .cap.on{background:var(--amber);color:#000;border-color:var(--amber);font-weight:800}
+.warn{background:rgba(255,200,87,.12);border:1px solid var(--amber);color:var(--amber);border-radius:10px;padding:8px 12px;font-size:.88rem;margin:8px 0}
+.okmsg{background:rgba(46,255,123,.12);border:1px solid var(--green);color:var(--green);border-radius:10px;padding:8px 12px;font-size:.88rem;margin:8px 0}
+
+/* match */
+.vs{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;text-align:center}
+.vs .big{font-size:1.4rem;font-weight:900;color:var(--muted)}
+.score{font-size:clamp(2.5rem,10vw,4.5rem);font-weight:900;text-align:center;animation:pop .5s}
+.event{padding:6px 0;border-bottom:1px solid var(--line);font-size:.92rem}
+.disclaimer{font-size:.82rem;color:var(--muted);border-left:3px solid var(--green);padding-left:10px;margin:12px 0}
+table{width:100%;border-collapse:collapse}
+th,td{padding:9px 8px;text-align:left;border-bottom:1px solid var(--line);font-size:.9rem}
+th{color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.06em}
+tr.me{background:rgba(46,255,123,.12)}
+tr.me td:first-child{border-left:3px solid var(--green)}
+.res{display:inline-block;width:22px;height:22px;border-radius:6px;text-align:center;font-size:.75rem;font-weight:800;line-height:22px;color:#04210f}
+.res.W{background:var(--green)}.res.L{background:var(--red)}.res.D{background:var(--amber)}
+.empty-state{text-align:center;padding:28px;color:var(--muted)}
+.spinner{width:34px;height:34px;border:4px solid var(--line);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite;margin:20px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--card);border:1px solid var(--green);padding:10px 18px;border-radius:10px;z-index:100;transition:transform .3s;max-width:90vw}
+#toast.show{transform:translateX(-50%) translateY(0)}
+#toast.error{border-color:var(--red);color:var(--red)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tabs button{background:var(--bg2);border:1px solid var(--line);padding:7px 14px;border-radius:99px;cursor:pointer;color:var(--muted);font-weight:600}
+.tabs button.active{background:var(--green);color:#04210f;border-color:var(--green)}
+.screen{animation:fade .25s}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+footer{padding:24px 16px;text-align:center;color:var(--muted);font-size:.78rem}
 </style>
 </head>
 <body>
-<main class="wrap" id="app">
-<h1>UCL <span class="green">DRAFT</span></h1>
-<p class="muted">Prototype scaffold. The full app is being uploaded in follow-up commits.</p>
-</main>
-</body>
-</html>
+
+<header class="top">
+  <div class="wrap">
+    <button class="logo" onclick="go(state.profile?'dashboard':'welcome')" aria-label="UCL Draft home">UCL<span>DRAFT</span></button>
+    <nav id="nav" class="hidden" aria-label="Main navigation"></nav>
+  </div>
+</header>
+
+<div id="statusbar" class="status-bar hidden" role="status" aria-live="polite"><div class="wrap" id="statusInner"></div></div>
+
+<main class="wrap" id="app"></main>
+<div id="toast" role="alert"></div>
+<footer>UCL Draft is an unofficial fan-made prototype. Not affiliated with UEFA or any club. Ratings and prices are game values, not official statistics. No betting, no prizes, no payments.</footer>
+
+<script>
+/* ============================================================
+   DATA — DEMO DATABASE (replace PLAYERS with a live feed later)
+   Format: [name, pos, club, rating, price, pace, passing, shooting, defending, physical]
+   Real players/clubs; ratings, prices, attributes are GAME VALUES.
+   Verify squads/competition participants against a live source.
+   ============================================================ */
+const DATA_META = {
+  source: "Hand-curated demo database (not a live feed)",
+  lastUpdated: "2026-10-29",
+  notes: "Players and clubs are real, but squad membership may be outdated. Ratings, prices and attributes are invented game values."
+};
+const RAW = [
+// Real Madrid
+["Thibaut Courtois","GK","Real Madrid",89,11,45,60,20,35,70],
+["Dani Carvajal","DEF","Real Madrid",84,8,76,72,50,82,78],
+["Antonio Rüdiger","DEF","Real Madrid",85,9,78,62,45,86,88],
+["Kylian Mbappé","FWD","Real Madrid",93,15,97,80,92,35,78],
+["Vinícius Júnior","FWD","Real Madrid",92,15,96,78,85,30,70],
+["Jude Bellingham","MID","Real Madrid",91,14,80,84,84,72,82],
+["Federico Valverde","MID","Real Madrid",87,11,85,80,78,76,84],
+// Barcelona
+["Marc-André ter Stegen","GK","Barcelona",86,9,40,70,15,30,68],
+["Ronald Araújo","DEF","Barcelona",84,8,80,58,40,86,87],
+["Jules Koundé","DEF","Barcelona",84,8,82,72,45,84,76],
+["Pedri","MID","Barcelona",88,12,75,90,72,68,66],
+["Frenkie de Jong","MID","Barcelona",86,10,76,89,65,76,74],
+["Lamine Yamal","FWD","Barcelona",89,13,90,84,80,30,60],
+["Robert Lewandowski","FWD","Barcelona",88,11,70,76,92,40,80],
+["Raphinha","FWD","Barcelona",87,11,88,80,83,45,72],
+// Manchester City
+["Ederson","GK","Manchester City",86,9,50,82,15,30,72],
+["Rúben Dias","DEF","Manchester City",87,10,68,70,40,90,86],
+["Joško Gvardiol","DEF","Manchester City",85,9,76,72,55,86,82],
+["Rodri","MID","Manchester City",91,13,60,89,74,86,84],
+["Kevin De Bruyne","MID","Manchester City",88,12,66,94,86,55,72],
+["Phil Foden","MID","Manchester City",88,12,82,88,82,50,64],
+["Erling Haaland","FWD","Manchester City",92,15,90,66,96,40,92],
+["Bernardo Silva","MID","Manchester City",87,11,74,90,76,62,66],
+// Liverpool
+["Alisson","GK","Liverpool",88,11,45,72,15,35,74],
+["Virgil van Dijk","DEF","Liverpool",88,10,76,72,60,91,88],
+["Trent Alexander-Arnold","DEF","Liverpool",86,9,78,92,70,74,66],
+["Andy Robertson","DEF","Liverpool",83,7,82,78,55,78,74],
+["Alexis Mac Allister","MID","Liverpool",85,9,70,86,72,72,74],
+["Mohamed Salah","FWD","Liverpool",91,14,88,82,90,40,74],
+["Darwin Núñez","FWD","Liverpool",82,8,90,62,82,36,82],
+// Arsenal
+["David Raya","GK","Arsenal",84,8,48,74,15,30,70],
+["William Saliba","DEF","Arsenal",87,10,78,70,48,89,84],
+["Gabriel Magalhães","DEF","Arsenal",85,9,72,66,50,87,86],
+["Declan Rice","MID","Arsenal",87,11,76,82,70,84,86],
+["Martin Ødegaard","MID","Arsenal",87,11,72,92,80,56,64],
+["Bukayo Saka","FWD","Arsenal",89,13,86,84,82,52,70],
+["Gabriel Jesus","FWD","Arsenal",82,7,84,74,80,44,74],
+// Bayern Munich
+["Manuel Neuer","GK","Bayern Munich",85,8,45,78,15,30,72],
+["Joshua Kimmich","MID","Bayern Munich",88,12,70,92,72,80,76],
+["Jamal Musiala","MID","Bayern Munich",89,13,84,86,82,48,62],
+["Harry Kane","FWD","Bayern Munich",91,14,70,88,94,44,82],
+["Leroy Sané","FWD","Bayern Munich",85,9,92,78,80,38,70],
+["Dayot Upamecano","DEF","Bayern Munich",82,7,84,62,40,84,86],
+["Alphonso Davies","DEF","Bayern Munich",84,8,96,74,55,76,74],
+// PSG
+["Gianluigi Donnarumma","GK","Paris Saint-Germain",87,10,45,60,15,30,76],
+["Achraf Hakimi","DEF","Paris Saint-Germain",86,10,95,78,66,78,76],
+["Marquinhos","DEF","Paris Saint-Germain",86,9,70,74,50,89,82],
+["Vitinha","MID","Paris Saint-Germain",85,9,74,90,70,68,68],
+["Ousmane Dembélé","FWD","Paris Saint-Germain",88,12,93,82,82,35,64],
+["Bradley Barcola","FWD","Paris Saint-Germain",83,8,93,72,78,34,66],
+["Nuno Mendes","DEF","Paris Saint-Germain",84,8,90,78,52,80,72],
+// Inter
+["Yann Sommer","GK","Inter",83,6,42,68,15,30,66],
+["Alessandro Bastoni","DEF","Inter",86,9,72,82,46,88,80],
+["Denzel Dumfries","DEF","Inter",82,6,84,66,66,76,86],
+["Nicolò Barella","MID","Inter",86,9,78,86,74,76,78],
+["Hakan Çalhanoğlu","MID","Inter",85,9,64,90,82,66,72],
+["Lautaro Martínez","FWD","Inter",89,12,80,74,90,46,80],
+["Marcus Thuram","FWD","Inter",84,8,84,72,82,42,86],
+// Juventus
+["Michele Di Gregorio","GK","Juventus",80,5,42,66,15,30,66],
+["Gleison Bremer","DEF","Juventus",84,7,74,60,40,88,88],
+["Khéphren Thuram","MID","Juventus",80,5,76,74,66,72,80],
+["Dušan Vlahović","FWD","Juventus",84,8,78,62,88,36,86],
+["Kenan Yıldız","FWD","Juventus",80,5,84,76,76,30,58],
+// Atlético Madrid
+["Jan Oblak","GK","Atlético Madrid",87,9,42,62,15,35,76],
+["José María Giménez","DEF","Atlético Madrid",82,6,66,58,36,86,86],
+["Koke","MID","Atlético Madrid",82,6,60,86,66,70,70],
+["Antoine Griezmann","FWD","Atlético Madrid",86,10,76,86,86,62,70],
+["Julián Álvarez","FWD","Atlético Madrid",85,10,82,76,84,52,72],
+["Rodrigo De Paul","MID","Atlético Madrid",82,6,72,84,70,72,76],
+// Borussia Dortmund
+["Gregor Kobel","GK","Borussia Dortmund",85,8,44,64,15,30,72],
+["Nico Schlotterbeck","DEF","Borussia Dortmund",82,6,68,70,42,85,82],
+["Julian Brandt","MID","Borussia Dortmund",82,6,72,86,76,50,64],
+["Serhou Guirassy","FWD","Borussia Dortmund",84,7,80,62,88,40,84],
+["Karim Adeyemi","FWD","Borussia Dortmund",78,4,95,64,76,32,66],
+// Napoli
+["Alex Meret","GK","Napoli",80,4,42,62,15,30,66],
+["Giovanni Di Lorenzo","DEF","Napoli",80,5,74,70,50,82,78],
+["Scott McTominay","MID","Napoli",82,6,70,72,76,72,86],
+["Kevin De Bruyne ","MID","Napoli",0,0,0,0,0,0,0],
+// Bayer Leverkusen
+["Granit Xhaka","MID","Bayer Leverkusen",84,7,60,88,72,76,78],
+["Florian Wirtz","MID","Bayer Leverkusen",89,13,82,90,82,46,62],
+["Jeremie Frimpong","DEF","Bayer Leverkusen",82,6,95,72,66,72,68],
+// Tottenham
+["Guglielmo Vicario","GK","Tottenham Hotspur",81,5,42,64,15,30,68],
+["Cristian Romero","DEF","Tottenham Hotspur",84,7,72,64,44,87,86],
+["Son Heung-min","FWD","Tottenham Hotspur",85,9,86,76,86,40,66],
+["James Maddison","MID","Tottenham Hotspur",83,7,66,88,80,46,62],
+// Benfica
+["Anatoliy Trubin","GK","Benfica",80,4,42,62,15,30,68],
+["Nicolás Otamendi","DEF","Benfica",78,3,50,66,40,82,78],
+["Ángel Di María","MID","Benfica",80,4,70,86,78,40,60],
+["Vangelis Pavlidis","FWD","Benfica",80,4,74,60,84,36,80],
+// PSV / Ajax / Porto / Sporting etc.
+["Jurriën Timber","DEF","Arsenal",83,7,80,70,42,84,78],
+["Viktor Gyökeres","FWD","Arsenal",85,9,86,64,88,38,86],
+["Pedro Porro","DEF","Tottenham Hotspur",81,5,84,76,56,76,72],
+["Rúben Neves","MID","Al-Hilal",0,0,0,0,0,0,0],
+["Diogo Costa","GK","Porto",83,6,42,64,15,30,68],
+["Francisco Conceição","FWD","Juventus",79,4,92,72,74,30,60],
+["Gonçalo Inácio","DEF","Sporting CP",81,5,72,70,40,84,78],
+["Morten Hjulmand","MID","Sporting CP",81,5,66,78,64,80,80],
+["Xavi Simons","MID","Tottenham Hotspur",82,6,82,84,74,44,60],
+["Mats Wieffer","MID","Brighton",0,0,0,0,0,0,0],
+["Matthijs de Ligt","DEF","Manchester United",82,6,64,68,40,85,84],
+["Federico Dimarco","DEF","Inter",84,8,80,86,66,70,72],
+["Piero Hincapié","DEF","Bayer Leverkusen",81,5,78,66,40,83,78],
+["Moussa Diaby","FWD","Al-Ittihad",0,0,0,0,0,0,0],
+["Ademola Lookman","FWD","Atalanta",83,7,90,70,82,34,66],
+["Marco Carnesecchi","GK","Atalanta",80,4,42,62,15,30,66],
+["Ederson Santana","MID","Atalanta",82,6,70,76,66,76,80],
+["Mike Maignan","GK","AC Milan",86,9,42,66,15,30,72],
+["Theo Hernández","DEF","AC Milan",84,8,90,72,60,76,78],
+["Rafael Leão","FWD","AC Milan",86,10,95,72,82,34,72],
+["Aurélien Tchouaméni","MID","Real Madrid",85,9,70,80,66,82,84],
+["Eduardo Camavinga","MID","Real Madrid",84,8,76,80,60,80,78],
+["Trent Test","MID","Void",0,0,0,0,0,0,0]
+];
+// Filter out placeholder/invalid rows (rating 0) so only valid entries ship.
+const PLAYERS = RAW.filter(r=>r[3]>0).map((r,i)=>({
+  id:i+1,name:r[0],pos:r[1],club:r[2],rating:r[3],price:r[4],
+  attrs:{PAC:r[5],PAS:r[6],SHO:r[7],DEF:r[8],PHY:r[9]}
+}));
+const CLUBS=[...new Set(PLAYERS.map(p=>p.club))].sort();
+
+const SQUAD_LIMITS={GK:2,DEF:5,MID:5,FWD:3};
+const FORMATIONS={
+  "4-3-3":{GK:1,DEF:4,MID:3,FWD:3},
+  "4-4-2":{GK:1,DEF:4,MID:4,FWD:2},
+  "3-5-2":{GK:1,DEF:3,MID:5,FWD:2},
+  "4-2-3-1":{GK:1,DEF:4,MID:5,FWD:1}
+};
+const POS_NAME={GK:"Goalkeepers",DEF:"Defenders",MID:"Midfielders",FWD:"Forwards"};
+
+const MODES={
+  quick:{name:"Quick Match",desc:"Play a random demo opponent right now.",budget:100,clubLimit:15},
+  private:{name:"Private Match",desc:"Create a room code and challenge a friend (simulated in this prototype).",budget:100,clubLimit:15},
+  league:{name:"Weekly League",desc:"Play fixtures and climb the weekly leaderboard.",budget:100,clubLimit:15},
+  challenge:{name:"Draft Challenge",desc:"Special rule: 80 credits and max 2 players per club.",budget:80,clubLimit:2}
+};
+
+/* ============================================================
+   STATE (persisted to localStorage)
+   ============================================================ */
+const KEY="uclDraftV1";
+let state={
+  profile:null,           // {name, squadName}
+  picked:[],              // player ids
+  lineup:null,            // {formation, slots:[ids|null], captain:id|null}
+  saved:false,
+  mode:"quick",
+  history:[],             // match results
+  league:{week:weekNumber(),points:0,wins:0,losses:0,draws:0},
+  match:null,             // current match (not persisted heavily)
+  screen:"welcome"
+};
+function weekNumber(){const d=new Date();const s=new Date(d.getFullYear(),0,1);return Math.ceil(((d-s)/86400000+s.getDay()+1)/7)}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+function load(){
+  try{
+    const s=JSON.parse(localStorage.getItem(KEY));
+    if(s){state=Object.assign(state,s);
+      if(state.league.week!==weekNumber()){state.league={week:weekNumber(),points:0,wins:0,losses:0,draws:0}}
+    }
+  }catch(e){}
+}
+const P=id=>PLAYERS.find(p=>p.id===id);
+const picked=()=>state.picked.map(P);
+const budgetTotal=()=>MODES[state.mode].budget;
+const spent=()=>picked().reduce((a,p)=>a+p.price,0);
+const remaining=()=>budgetTotal()-spent();
+const countPos=pos=>picked().filter(p=>p.pos===pos).length;
+const clubCount=c=>picked().filter(p=>p.club===c).length;
+
+/* ============================================================
+   UI HELPERS
+   ============================================================ */
+const  $ =s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&","<":"<",">":">",'"':""","'":"'"}[c]));
+function toast(msg,err){const t= $ ("#toast");t.textContent=msg;t.className=(err?"error ":"")+"show";clearTimeout(toast.t);toast.t=setTimeout(()=>t.className="",2600)}
+function go(screen){
+  if(!state.profile&&!["welcome","signup"].includes(screen))screen="welcome";
+  state.screen=screen;save();render();window.scrollTo({top:0})
+}
+function renderNav(){
+  const nav= $ ("#nav");
+  if(!state.profile){nav.classList.add("hidden");return}
+  nav.classList.remove("hidden");
+  const items=[["dashboard","Home"],["draft","Draft"],["squad","Squad"],["preview","Play"],["leaderboard","Ranks"],["profile","Profile"],["settings","Data"]];
+  nav.innerHTML=items.map(([k,l])=>`<button class=" $ {state.screen===k||(k==="preview"&&state.screen==="results")?"active":""}" onclick="go('${k}')">${l}</button>`).join("");
+}
+function renderStatus(){
+  const sb=$("#statusbar");
+  if(state.screen!=="draft"){sb.classList.add("hidden");return}
+  sb.classList.remove("hidden");
+  const n=state.picked.length,r=remaining();
+  $("#statusInner").innerHTML=`
+    <div class="stat ${r<8?'low':''}">Budget left: <b>${r}</b> / ${budgetTotal()}</div>
+    <div class="stat">Players: <b>${n}</b> / 15</div>
+    <div class="bar" aria-hidden="true"><i style="width:${n/15*100}%"></i></div>
+    <div class="stat muted">${["GK","DEF","MID","FWD"].map(p=>`${p} ${countPos(p)}/${SQUAD_LIMITS[p]}`).join(" · ")}</div>`;
+}
+
+/* ============================================================
+   SCREEN: WELCOME
+   ============================================================ */
+function vWelcome(){
+  return `<section class="screen">
+  <div class="hero">
+    <h1>Draft your <span class="green">Champions League</span> XI.</h1>
+    <p>Pick real players from Champions League clubs, stay under budget, choose a formation and battle other squads in simulated matches. Free to play. No betting, no prizes.</p>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button class="btn" onclick="go('signup')">Get started</button>
+      <button class="btn ghost" onclick="guest()">Play as guest</button>
+    </div>
+  </div>
+  <div class="grid g3 steps">
+    <div class="card"><h3>Draft</h3><p class="muted">Spend 100 credits on 15 players: 2 GK, 5 DEF, 5 MID, 3 FWD.</p></div>
+    <div class="card"><h3>Build</h3><p class="muted">Pick a formation, set your starting XI, and name a captain.</p></div>
+    <div class="card"><h3>Compete</h3><p class="muted">Play simulated matches, climb the weekly leaderboard.</p></div>
+  </div></section>`;
+}
+function vSignup(){
+  return `<section class="screen" style="max-width:460px;margin:30px auto">
+  <div class="card">
+    <h2>Create your profile</h2>
+    <p class="muted">Just a display name. Stored only in this browser.</p>
+    <form onsubmit="event.preventDefault();signup()">
+      <label for="dn">Display name</label>
+      <input type="text" id="dn" maxlength="20" autocomplete="off" placeholder="e.g. TacticalFox">
+      <label for="sn">Squad name</label>
+      <input type="text" id="sn" maxlength="24" autocomplete="off" placeholder="e.g. Midnight XI">
+      <div class="err" id="suErr" role="alert"></div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn" type="submit">Enter Draft Room</button>
+        <button class="btn ghost" type="button" onclick="guest()">Guest instead</button>
+      </div>
+    </form>
+  </div></section>`;
+}
+function signup(){
+  const n= $ ("#dn").value.trim(),s= $ ("#sn").value.trim()||"My Squad";
+  const err= $ ("#suErr");
+  if(n.length<2){err.textContent="Display name must be at least 2 characters."; $ ("#dn").focus();return}
+  if(!/^[\w\s.\-]+$/.test(n)){err.textContent="Use letters, numbers, spaces, dots or dashes only.";return}
+  state.profile={name:n,squadName:s,guest:false};
+  go("dashboard");toast("Welcome, "+n+"!");
+}
+function guest(){
+  state.profile={name:"Guest"+Math.floor(100+Math.random()*900),squadName:"Guest XI",guest:true};
+  go("dashboard");toast("Playing as guest");
+}
+
+/* ============================================================
+   SCREEN: DASHBOARD
+   ============================================================ */
+function squadRating(){
+  const l=lineupPlayers();if(!l.length)return picked().length?Math.round(picked().reduce((a,p)=>a+p.rating,0)/picked().length):0;
+  return Math.round(l.reduce((a,p)=>a+p.rating,0)/l.length);
+}
+function lineupPlayers(){return state.lineup?state.lineup.slots.filter(Boolean).map(P):[]}
+function vDashboard(){
+  const complete=state.picked.length===15;
+  const rank=myRank();
+  return `<section class="screen">
+  <h2>Hello, ${esc(state.profile.name)} 👋</h2>
+  <p class="muted">Squad: <b style="color:#fff">${esc(state.profile.squadName)}</b> ${state.saved?'<span class="tag MID">SAVED</span>':'<span class="tag">NOT LOCKED</span>'}</p>
+  <div class="grid g3" style="margin:14px 0">
+    <div class="card"><div class="muted">Squad rating</div><div class="rating" style="font-size:2rem">${squadRating()||"–"}</div></div>
+    <div class="card"><div class="muted">${complete?"Squad size":"Budget remaining"}</div><div class="rating" style="font-size:2rem">${complete?"15/15":remaining()+" cr"}</div></div>
+    <div class="card"><div class="muted">Weekly rank</div><div class="rating" style="font-size:2rem">#${rank}</div></div>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+    <button class="btn" onclick="go('draft')">${complete?"Edit Squad":"Build Squad"}</button>
+    <button class="btn" onclick="go('preview')">Play Match</button>
+    <button class="btn ghost" onclick="go('leaderboard')">Leaderboard</button>
+  </div>
+  <div class="grid g2">
+    <div class="card"><h3>Recent results</h3>${recentList()}</div>
+    <div class="card"><h3>How to play</h3><ol class="muted" style="padding-left:18px;margin-top:8px;line-height:1.8">
+      <li>Draft 15 players within your budget.</li>
+      <li>Choose a formation and set your XI + captain.</li>
+      <li>Save your squad, then pick a game mode.</li>
+      <li>Watch the simulation and climb the table.</li></ol></div>
+  </div></section>`;
+}
+function recentList(){
+  if(!state.history.length)return `<div class="empty-state">No matches yet. Play your first match!</div>`;
+  return state.history.slice(0,5).map(m=>`<div class="event"><span class="res ${m.result}">${m.result}</span> ${esc(m.mode)} vs ${esc(m.opp)} — <b>${m.hs}–${m.as}</b></div>`).join("");
+}
+
+/* ============================================================
+   SCREEN: DRAFT ROOM
+   ============================================================ */
+let F={q:"",pos:"",club:"",maxPrice:"",minRating:"",sort:"rating"};
+function filtered(){
+  return PLAYERS.filter(p=>
+    (!F.q||p.name.toLowerCase().includes(F.q.toLowerCase()))&&
+    (!F.pos||p.pos===F.pos)&&(!F.club||p.club===F.club)&&
+    (!F.maxPrice||p.price<=+F.maxPrice)&&(!F.minRating||p.rating>=+F.minRating)
+  ).sort((a,b)=>F.sort==="price"?b.price-a.price:F.sort==="name"?a.name.localeCompare(b.name):b.rating-a.rating);
+}
+function vDraft(){
+  const m=MODES[state.mode];
+  return `<section class="screen">
+  <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:center">
+    <h2>Draft Room</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn ghost sm" onclick="autoFill()" ${state.saved?"disabled":""}>⚡ Auto-fill squad</button>
+      <button class="btn danger sm" onclick="clearSquad()" ${state.saved?"disabled":""}>Clear</button>
+      <button class="btn sm" onclick="go('squad')" ${state.picked.length<15?"disabled":""}>Next: Squad Builder →</button>
+    </div>
+  </div>
+  ${state.mode==="challenge"?`<div class="warn">Draft Challenge active: ${m.budget} credits, max ${m.clubLimit} players per club.</div>`:""}
+  ${state.saved?`<div class="warn">Squad is locked. <button class="btn sm ghost" onclick="unlock()">Unlock to edit</button></div>`:""}
+  <div class="draft-grid">
+    <div>
+      <div class="card"><div class="filters">
+        <div class="full"><label for="fq">Search player</label><input id="fq" type="search" placeholder="Search by name…" value="${esc(F.q)}" oninput="setF('q',this.value,true)"></div>
+        <div><label for="fp">Position</label><select id="fp" onchange="setF('pos',this.value)"><option value="">All</option>${["GK","DEF","MID","FWD"].map(x=>`<option ${F.pos===x?"selected":""}>${x}</option>`).join("")}</select></div>
+        <div><label for="fc">Club</label><select id="fc" onchange="setF('club',this.value)"><option value="">All clubs</option>${CLUBS.map(c=>`<option ${F.club===c?"selected":""}>${esc(c)}</option>`).join("")}</select></div>
+        <div><label for="fm">Max price</label><select id="fm" onchange="setF('maxPrice',this.value)"><option value="">Any</option>${[4,6,8,10,12].map(x=>`<option value="${x}" ${F.maxPrice==x?"selected":""}>≤ ${x}</option>`).join("")}</select></div>
+        <div><label for="fr">Min rating</label><select id="fr" onchange="setF('minRating',this.value)"><option value="">Any</option>${[80,84,86,88,90].map(x=>`<option value="${x}" ${F.minRating==x?"selected":""}>≥ ${x}</option>`).join("")}</select></div>
+        <div><label for="fs">Sort</label><select id="fs" onchange="setF('sort',this.value)"><option value="rating" ${F.sort==="rating"?"selected":""}>Rating</option><option value="price" ${F.sort==="price"?"selected":""}>Price</option><option value="name" ${F.sort==="name"?"selected":""}>Name</option></select></div>
+      </div></div>
+      <div id="plist" class="plist" aria-live="polite"></div>
+    </div>
+    <aside class="card side" aria-label="Your squad"><h3>Your squad</h3><div id="sqSide"></div></aside>
+  </div></section>`;
+}
+function setF(k,v,keepFocus){F[k]=v;renderList();if(!keepFocus){}}
+function renderList(){
+  const el=$("#plist");if(!el)return;
+  const list=filtered();
+  if(!list.length){el.innerHTML=`<div class="empty-state card" style="grid-column:1/-1">No players match your filters. <br><button class="btn sm ghost" style="margin-top:10px" onclick="F={q:'',pos:'',club:'',maxPrice:'',minRating:'',sort:'rating'};render()">Reset filters</button></div>`;return}
+  el.innerHTML=list.map(cardHTML).join("");
+}
+function canPick(p){
+  if(state.saved)return "Squad is locked";
+  if(state.picked.includes(p.id))return "";
+  if(state.picked.length>=15)return "Squad is full (15)";
+  if(countPos(p.pos)>=SQUAD_LIMITS[p.pos])return `Max ${SQUAD_LIMITS[p.pos]} ${p.pos}`;
+  if(p.price>remaining())return `Need ${p.price} cr, only ${remaining()} left`;
+  const lim=MODES[state.mode].clubLimit;
+  if(clubCount(p.club)>=lim)return `Max ${lim} from ${p.club}`;
+  return "";
+}
+function cardHTML(p){
+  const sel=state.picked.includes(p.id),why=canPick(p);
+  return `<article class="pcard ${sel?"sel":""}">
+    <div class="row"><h3>${esc(p.name)}</h3><span class="rating" title="Game rating">${p.rating}</span></div>
+    <div class="row" style="margin-top:4px"><span class="muted" style="font-size:.85rem">${esc(p.club)}</span><span class="tag ${p.pos}">${p.pos}</span></div>
+    <div class="attrs">${Object.entries(p.attrs).map(([k,v])=>`<div>${k}<b>${v}</b></div>`).join("")}</div>
+    <div class="row"><span class="price">💰 ${p.price} cr</span>
+      ${sel?`<button class="btn danger sm" onclick="remove(${p.id})" ${state.saved?"disabled":""}>Remove</button>`
+           :`<button class="btn sm" onclick="pick(${p.id})" ${why?"disabled":""} ${why?`title="${esc(why)}"`:""}>Select</button>`}
+    </div>
+    ${(!sel&&why&&!state.saved)?`<div class="muted" style="font-size:.72rem;margin-top:6px">⛔ ${esc(why)}</div>`:""}
+  </article>`;
+}
+function renderSide(){
+  const el= $ ("#sqSide");if(!el)return;
+  el.innerHTML=["GK","DEF","MID","FWD"].map(pos=>{
+    const ps=picked().filter(p=>p.pos===pos);
+    let h=`<div class="sq-group"><h4> $ {POS_NAME[pos]} ${ps.length}/${SQUAD_LIMITS[pos]}</h4>`;
+    ps.forEach(p=>h+=`<div class="sq-item"><span>${esc(p.name)} <span class="muted">${p.price}cr</span></span><button class="btn danger sm" onclick="remove(${p.id})" aria-label="Remove ${esc(p.name)}" ${state.saved?"disabled":""}>✕</button></div>`);
+    for(let i=ps.length;i<SQUAD_LIMITS[pos];i++)h+=`<div class="sq-empty">Empty slot</div>`;
+    return h+"</div>";
+  }).join("");
+}
+function refreshDraft(){renderStatus();renderList();renderSide
